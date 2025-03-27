@@ -1,0 +1,8 @@
+# src
+file(GLOB_RECURSE _CPP_SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
+LIST(APPEND CPP_SRC ${_CPP_SRC})
+
+# Pass to parent
+set(CPP_SRC ${CPP_SRC} PARENT_SCOPE)
