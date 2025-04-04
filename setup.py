@@ -4,8 +4,6 @@ import shutil
 import subprocess
 import sys
 
-from sysconfig import get_paths
-
 import setuptools.command.build_ext
 import setuptools.command.install
 import setuptools.command.sdist
@@ -20,6 +18,8 @@ TORCH_DIR = os.path.dirname(os.path.realpath(torch.__file__))
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 BUILD_DIR = os.path.join(BASE_DIR, "build")
 PACKAGE_DIR = os.path.join(BASE_DIR, "torch_cuone")
+
+CUDA_HOME = os.getenv("CUDA_HOME", "/usr/local/cuda")
 
 DEBUG = os.getenv("DEBUG", "0") == "1"
 USE_CXX11_ABI = os.getenv("_GLIBCXX_USE_CXX11_ABI", "1") == "1"
@@ -60,11 +60,13 @@ def CppExtension(name, sources, *args, **kwargs):
     include_dirs = kwargs.get("include_dirs", [])
     include_dirs.append(os.path.join(TORCH_DIR, "include"))
     include_dirs.append(os.path.join(TORCH_DIR, "include/torch/csrc/api/include"))
+    include_dirs.append(os.path.join(CUDA_HOME, "include"))
     kwargs["include_dirs"] = include_dirs
 
     # library_dirs
     library_dirs = kwargs.get("library_dirs", [])
     library_dirs.append(os.path.join(TORCH_DIR, "lib"))
+    library_dirs.append(os.path.join(CUDA_HOME, "lib64"))
     kwargs["library_dirs"] = library_dirs
 
     # libraries
@@ -73,7 +75,13 @@ def CppExtension(name, sources, *args, **kwargs):
     libraries.append("torch")
     libraries.append("torch_cpu")
     libraries.append("torch_python")
+    libraries.append("cudart")
     kwargs["libraries"] = libraries
+
+    # extra_link_args
+    extra_link_args = kwargs.get("extra_link_args", [])
+    extra_link_args.append("-lcudart")
+    kwargs["extra_link_args"] = extra_link_args
     return Extension(name, sources, *args, **kwargs)
 
 
